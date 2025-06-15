@@ -108,7 +108,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.googleLogin({
         googleId: googleData.sub,
-        email: googleData.email
+        email: googleData.email,
+        name: googleData.name
       });
       
       const { token, user } = response.data;
