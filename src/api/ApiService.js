@@ -1,7 +1,12 @@
 import axios from 'axios';
 
 // API base URL configuration
-const API_URL = process.env.REACT_APP_API_URL || 'https://localhost:7179';
+// In production, use the relative URL to leverage Nginx proxy
+// In development, use the full URL from environment variables
+const isDevelopment = process.env.NODE_ENV === 'development';
+const API_URL = isDevelopment 
+  ? (process.env.REACT_APP_API_URL || 'https://localhost:7179')
+  : '/api'; // Use relative path in production for Nginx proxy
 
 // Create an axios instance with default config
 const apiClient = axios.create({
@@ -40,88 +45,93 @@ apiClient.interceptors.response.use(
       }
     }
     
+    // Log errors in development
+    if (isDevelopment) {
+      console.error('API Error:', error);
+    }
+    
     return Promise.reject(error);
   }
 );
 
 // Auth services
 const authService = {
-  login: credentials => apiClient.post('/api/auth/login', credentials),
-  register: userData => apiClient.post('/api/auth/register', userData),
-  googleLogin: googleData => apiClient.post('/api/auth/google-login', googleData)
+  login: credentials => apiClient.post('/auth/login', credentials),
+  register: userData => apiClient.post('/auth/register', userData),
+  googleLogin: googleData => apiClient.post('/auth/google-login', googleData)
 };
 
 // Vehicle services
 const vehicleService = {
-  getAll: params => apiClient.get('/api/vehicles', { params }),
-  getById: id => apiClient.get(`/api/vehicles/${id}`),
+  getAll: params => apiClient.get('/vehicles', { params }),
+  getById: id => apiClient.get(`/vehicles/${id}`),
   getAvailable: (startDate, endDate, categoryId) => 
-    apiClient.get('/api/vehicles/available', { 
+    apiClient.get('/vehicles/available', { 
       params: { startDate, endDate, categoryId } 
     }),
-  search: query => apiClient.get('/api/vehicles/search', { params: { query } }),
-  create: vehicleData => apiClient.post('/api/vehicles', vehicleData),
-  update: (id, vehicleData) => apiClient.put(`/api/vehicles/${id}`, vehicleData),
-  delete: id => apiClient.delete(`/api/vehicles/${id}`),
-  getReviews: id => apiClient.get(`/api/vehicles/${id}/reviews`)
+  search: query => apiClient.get('/vehicles/search', { params: { query } }),
+  create: vehicleData => apiClient.post('/vehicles', vehicleData),
+  update: (id, vehicleData) => apiClient.put(`/vehicles/${id}`, vehicleData),
+  delete: id => apiClient.delete(`/vehicles/${id}`),
+  getReviews: id => apiClient.get(`/vehicles/${id}/reviews`)
 };
 
 // Booking services
 const bookingService = {
-  getAll: params => apiClient.get('/api/bookings', { params }),
-  getById: id => apiClient.get(`/api/bookings/${id}`),
-  getUserBookings: () => apiClient.get('/api/bookings/my'),
-  getPendingBookings: () => apiClient.get('/api/bookings/pending'),
-  create: bookingData => apiClient.post('/api/bookings', bookingData),
-  updateStatus: (id, status) => apiClient.put(`/api/bookings/${id}/status`, JSON.stringify(status), {
+  getAll: params => apiClient.get('/bookings', { params }),
+  getById: id => apiClient.get(`/bookings/${id}`),
+  getUserBookings: () => apiClient.get('/bookings/my'),
+  getPendingBookings: () => apiClient.get('/bookings/pending'),
+  create: bookingData => apiClient.post('/bookings', bookingData),
+  updateStatus: (id, status) => apiClient.put(`/bookings/${id}/status`, JSON.stringify(status), {
     headers: { 'Content-Type': 'application/json' }
   }),
-  extendBooking: (id, newReturnDate) => apiClient.put(`/api/bookings/${id}/extend`, JSON.stringify(newReturnDate), {
+  extendBooking: (id, newReturnDate) => apiClient.put(`/bookings/${id}/extend`, JSON.stringify(newReturnDate), {
     headers: { 'Content-Type': 'application/json' }
   }),
-  cancelBooking: id => apiClient.put(`/api/bookings/${id}/cancel`)
+  cancelBooking: id => apiClient.put(`/bookings/${id}/cancel`)
 };
 
 // User services
 const userService = {
-  getAll: params => apiClient.get('/api/users', { params }),
-  getById: id => apiClient.get(`/api/users/${id}`),
-  getProfile: () => apiClient.get('/api/users/profile'),
-  updateProfile: userData => apiClient.put('/api/users/profile', userData),
-  updateRole: (id, role) => apiClient.put(`/api/users/${id}/role`, JSON.stringify(role), {
+  getAll: params => apiClient.get('/users', { params }),
+  getById: id => apiClient.get(`/users/${id}`),
+  getProfile: () => apiClient.get('/users/profile'),
+  updateProfile: userData => apiClient.put('/users/profile', userData),
+  updateRole: (id, role) => apiClient.put(`/users/${id}/role`, JSON.stringify(role), {
     headers: { 'Content-Type': 'application/json' }
   }),
-  getDocuments: () => apiClient.get('/api/users/documents'),
-  uploadDocument: documentData => apiClient.post('/api/users/documents', documentData),
-  verifyDocument: id => apiClient.put(`/api/users/documents/${id}/verify`),
-  getLoyalty: () => apiClient.get('/api/users/loyalty')
+  getDocuments: () => apiClient.get('/users/documents'),
+  uploadDocument: documentData => apiClient.post('/users/documents', documentData),
+  verifyDocument: id => apiClient.put(`/users/documents/${id}/verify`),
+  getLoyalty: () => apiClient.get('/users/loyalty')
 };
 
 // Category services
 const categoryService = {
-  getAll: () => apiClient.get('/api/categories'),
-  getById: id => apiClient.get(`/api/categories/${id}`),
-  create: categoryData => apiClient.post('/api/categories', categoryData),
-  update: (id, categoryData) => apiClient.put(`/api/categories/${id}`, categoryData),
-  delete: id => apiClient.delete(`/api/categories/${id}`)
+  getAll: () => apiClient.get('/categories'),
+  getById: id => apiClient.get(`/categories/${id}`),
+  create: categoryData => apiClient.post('/categories', categoryData),
+  update: (id, categoryData) => apiClient.put(`/categories/${id}`, categoryData),
+  delete: id => apiClient.delete(`/categories/${id}`)
 };
 
 // Review services
 const reviewService = {
-  getVehicleReviews: vehicleId => apiClient.get(`/api/reviews/vehicle/${vehicleId}`),
-  getUserReviews: () => apiClient.get('/api/reviews/user'),
-  create: reviewData => apiClient.post('/api/reviews', reviewData),
-  delete: id => apiClient.delete(`/api/reviews/${id}`)
+  getVehicleReviews: vehicleId => apiClient.get(`/reviews/vehicle/${vehicleId}`),
+  getUserReviews: () => apiClient.get('/reviews/user'),
+  create: reviewData => apiClient.post('/reviews', reviewData),
+  delete: id => apiClient.delete(`/reviews/${id}`)
 };
 
 // Damage report services
 const damageService = {
-  getAll: () => apiClient.get('/api/damages'),
-  getById: id => apiClient.get(`/api/damages/${id}`),
-  getByBooking: bookingId => apiClient.get(`/api/damages/booking/${bookingId}`),
-  create: damageData => apiClient.post('/api/damages', damageData),
-  update: (id, damageData) => apiClient.put(`/api/damages/${id}`, damageData),
-  delete: id => apiClient.delete(`/api/damages/${id}`)
+  getAll: () => apiClient.get('/damages'),
+  getById: id => apiClient.get(`/damages/${id}`),
+  getByBooking: bookingId => apiClient.get(`/damages/booking/${bookingId}`),
+  create: damageData => apiClient.post('/damages', damageData),
+  update: (id, damageData) => apiClient.put(`/damages/${id}`, damageData),
+  delete: id => apiClient.delete(`/damages/${id}`)
 };
 
 // File upload service
@@ -131,7 +141,7 @@ const fileService = {
     formData.append('file', file);
     formData.append('folderName', folderName);
     
-    const response = await apiClient.post('/api/files/upload', formData, {
+    const response = await apiClient.post('/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -142,6 +152,7 @@ const fileService = {
 };
 
 export {
+  apiClient,  // Export base client for direct use if needed
   authService,
   vehicleService,
   bookingService,
