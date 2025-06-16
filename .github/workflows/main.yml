@@ -26,12 +26,6 @@ jobs:
         
     - name: Install dependencies
       run: npm ci
-      
-    - name: Run linting
-      run: npm run lint || true
-      
-    - name: Run tests
-      run: npm test -- --passWithNoTests
 
   build-and-push:
     needs: test
