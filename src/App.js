@@ -28,7 +28,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Set default axios baseURL
 import axios from 'axios';
-axios.defaults.baseURL = 'https://localhost:7179';
+
+// IMPORTANT: Updated to use the relative path for the API
+// This will use the Nginx proxy instead of trying to connect directly to localhost
+axios.defaults.baseURL = '/api';
 
 // Add auth token to requests
 axios.interceptors.request.use(
@@ -40,6 +43,23 @@ axios.interceptors.request.use(
     return config;
   },
   error => Promise.reject(error)
+);
+
+// Add response interceptor for handling auth errors
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      // Clear invalid token
+      localStorage.removeItem('token');
+      
+      // Redirect to login if not already there
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 // Protected Route Component
@@ -154,5 +174,3 @@ function App() {
     </AuthProvider>
   );
 }
-
-export default App;
