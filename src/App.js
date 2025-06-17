@@ -26,12 +26,11 @@ import NotFound from './pages/NotFound';
 // Authentication Context
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-// Set default axios baseURL
+// Set default axios behavior
 import axios from 'axios';
 
-// IMPORTANT: Updated to use the relative path for the API
-// This will use the Nginx proxy instead of trying to connect directly to localhost
-axios.defaults.baseURL = '/api';
+// REMOVED baseURL to avoid duplicate /api path
+// No default baseURL needed since ApiService.js has the full paths
 
 // Add auth token to requests
 axios.interceptors.request.use(
